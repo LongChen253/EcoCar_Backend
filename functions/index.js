@@ -1,9 +1,25 @@
 const functions = require("firebase-functions");
+const admin = require('firebase-admin');
+admin.initializeApp();
+var db = admin.database();
+var ref = db.ref("data");
+var usersRef = ref.child("users");
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+
+exports.createUserDB = functions.https.onRequest((req, res) => {
+    var qusername = req.query.username;
+    var qpassword = req.query.password;
+    var qemail = req.query.email;
+
+    usersRef.orderByKey().equalTo(qusername).once('value', (snapshot) => {
+        if (snapshot.exists()) res.json({result: false, ErrorMessage: "UserAlreadyExist!"});
+        else {
+            usersRef.child(qusername).set({
+                password: qpassword,
+                email: qemail
+            });
+            res.json({result: true});
+        }
+
+    })
+});
